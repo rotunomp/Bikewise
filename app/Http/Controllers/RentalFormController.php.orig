@@ -1,0 +1,233 @@
+<?php
+
+namespace App\Http\Controllers;
+require_once(env('VENDOR_DIRECTORY', '/var/www/Bikewise') . '/vendor/square/connect/autoload.php');
+$accessToken = 'EAAAEEsU-Lfwvh17ouZX68jMS45ixuSSiVV44Q42atU4DqATQtX-hRAenZqe7yCK';
+$locationId = 'CBASEERAs1EHjZz4-qpUx8k4QJwgAQ';
+
+$defaultApiConfig = new \SquareConnect\Configuration();
+$defaultApiConfig->setAccessToken($accessToken);
+$defaultApiClient = new \SquareConnect\ApiClient($defaultApiConfig);
+$checkoutClient = new \SquareConnect\Api\CheckoutApi($defaultApiClient);
+
+use App\Accessory;
+use App\Bicycle;
+use App\MailInfo;
+use App\Package;
+use App\Person;
+use App\Rental;
+use App\Semester;
+use Carbon\Carbon;
+use http\Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+
+class RentalFormController extends Controller
+{
+    public function getRentalForm()
+    {
+        $bicycles = Bicycle::where('isAvailable', 1)->orderBy('price')->get();
+        $accessories = Accessory::where('isAvailable', 1)->orderBy('price')->get();
+        $packages = Package::where('isShopPackage', 1)->orderBy('price')->get();
+        $semesters = $this->getValidSemesters();
+
+        $lights = new Collection();
+        $backs = new Collection();
+        $kickstands = new Collection();
+        $locks = new Collection();
+        $otherAccessories = new Collection();
+
+        foreach ($accessories as $accessory) {
+
+            $location = $accessory->locationOnBike;
+
+            if ($location == 'light') {
+                $lights->push($accessory);
+            } elseif ($location == 'back') {
+                $backs->push($accessory);
+            } elseif ($location == 'kickstand') {
+                $kickstands->push($accessory);
+            } elseif ($location == 'lock') {
+                $locks->push($accessory);
+            } else {
+                $otherAccessories->push($accessory);
+            }
+
+        }
+
+        $keyedAccessories = new Collection();
+
+        // New collection which maps accessory key to name so we get the names in the blade
+        foreach($accessories as $accessory) {
+            $keyedAccessories->put($accessory->id, $accessory->name);
+        }
+
+        return view('rentals', [
+            'bicycles' => $bicycles,
+            'accessories' => $accessories,
+            'packages' => $packages,
+            'lights' => $lights,
+            'backs' => $backs,
+            'kickstands' => $kickstands,
+            'locks' => $locks,
+            'otherAccessories' => $otherAccessories,
+            'semesters' => $semesters,
+            'keyedAccessories' => $keyedAccessories,
+        ]);
+    }
+
+    // Puts the rental form in the
+    public function saveRental()
+    {
+
+        $request = request();
+        $rental = new Rental();
+        $person = new Person();
+
+<<<<<<< HEAD
+
+=======
+>>>>>>> bb8570b7787a391b28a89912dbdb8a96e780e531
+        //square payment
+        //need to store each in a session var with unique id and then wait
+        //in new landing confirm page there will be something that then stores the session var in the database when payment is completed
+        //Create a Money object to represent the price of the line item.
+//        $price = new \SquareConnect\Model\Money;
+//        $price->setAmount(0.00);
+//        $price->setCurrency('USD');
+//
+//        //Create the line item and set details
+//        $bike = new \SquareConnect\Model\CreateOrderRequestLineItem;
+//        $bike->setName('Bikewise Rental');
+//        $bike->setQuantity('1');
+//        $bike->setBasePriceMoney($price);
+//
+//        //Puts our line item object in an array called lineItems.
+//        $lineItems = array();
+//        array_push($lineItems, $bike);
+//
+//        //Create an Order object using line items from above
+//        $order = new \SquareConnect\Model\CreateOrderRequest();
+//
+//        $order->setIdempotencyKey(uniqid()); //uniqid() generates a random string.
+//
+//        //sets the lineItems array in the order object
+//        $order->setLineItems($lineItems);
+//
+//        $checkout = new \SquareConnect\Model\CreateCheckoutRequest();
+//        $checkout->setIdempotencyKey(uniqid()); //uniqid() generates a random string.
+//        $checkout->setOrder($order); //this is the order we created in the previous step
+//        $checkout->setAskForShippingAddress(false);
+//
+//        global $checkoutClient;
+//	global $locationId;
+//
+//        try {
+//            $result = $checkoutClient->createCheckout(
+//                $locationId,
+//                $checkout
+//            );
+//            //Save the checkout ID for verifying transactions
+//            $checkoutId = $result->getCheckout()->getId();
+//            //Get the checkout URL that opens the checkout page.
+//            $checkoutUrl = $result->getCheckout()->getCheckoutPageUrl();
+//            print_r('Complete your transaction: ' . $checkoutUrl);
+//        } catch (Exception $e) {
+//            echo 'Exception when calling CheckoutApi->createCheckout: ', $e->getMessage(), PHP_EOL;
+//        }
+
+        // Handling package
+        $packageId = null;
+        if ($request['package'] == 'custom') {
+            // TODO
+            $package = new Package();
+
+            $package->name = \request('custom');
+            $package->price = \request('TODO'); // TODO
+            $package->isShopPackage = false;
+            $package->accessoryLight = \request('accessoryLight');
+            $package->accessoryBack = \request('accessoryBack');
+            $package->accessoryLock = \request('accessoryLock');
+            $package->accessoryKickstand = \request('accessoryKickstand');
+            $package->accessory5 = \request('accessory5');
+            $package->accessory6 = \request('accessory6');
+            $package->accessory7 = \request('accessory7');
+            $package->accessory8 = \request('accessory8');
+            $package->accessory9 = \request('accessory9');
+            $package->accessory10 = \request('accessory10');
+            $package->accessory11 = \request('accessory11');
+            $package->accessory12 = \request('accessory12');
+            $package->accessory13 = \request('accessory13');
+            $package->accessory14 = \request('accessory14');
+            $package->accessory15 = \request('accessory15');
+            $package->save();
+            $package->fresh();
+
+            $packageId = $package->id;
+        } else {
+            $packageId = \request('package');
+        }
+
+        // Person data
+        $person->firstName = $request['fstName'];
+        $person->lastName = $request['lstName'];
+        $person->homePhone = $request['userHomePhone'];
+        $person->homeStreetAddress = $request['userHomeAddr'];
+        $person->homeCity = $request['userHomeCity'];
+        $person->homeState = $request['userHomeState'];
+        $person->homeZipCode = $request['userHomeZip'];
+        $person->driversLicenseNumber = $request['driversLicenseNumber'];
+        $person->stateOfDriversLicense = $request['stateOfDriversLicense'];
+        $person->localAddress = $request['userLocalAddr'];
+        $person->localPhone = $request['userLocalPhone'];
+        $person->cellPhone = $request['cellPhone'];
+        $person->email = $request['userEmail'];
+        $person->heightInches = $request['height'];
+        $person->inseam = $request['inseam'];
+        $person->save();
+        $person->fresh();
+
+        $rental->bikeId = $request['bikeSelected'];
+        $rental->accessoryListId = $packageId; // TODO: check that this works
+        $rental->personId = $person->id; // TODO: check that this works
+        $rental->dateCreated = Carbon::today();
+        $rental->startDate = Carbon::parse($rental['semesterStart']);
+        $rental->endDate = Carbon::parse($rental['semesterEnd']);
+        $rental->price = 0; // TODO
+        $rental->length = 'TODO'; // TODO
+        $rental->isDelivered = false;
+        $rental->isReturned = false;
+        $rental->isPaid = false; // TODO
+        $rental->frameSize = 0; // TODO
+        $rental->serialNumber = 'TODO';
+        $rental->save();
+
+        $this->writeOrderConfirmEmail($person->firstName, $person->lastName, $rental->id);
+
+        return request();
+    }
+
+    private function writeOrderConfirmEmail(string $firstName, string $lastName, string $rentalId)
+    {
+
+    }
+
+    // Returns a collection of semesters that we want the user to choose from
+    private function getValidSemesters(): Collection
+    {
+        $allSemesters = Semester::all();
+        $validSemesters = new Collection();
+
+        foreach ($allSemesters as $semester) {
+            $semesterStart = Carbon::parse($semester->startDate);
+            $semesterEnd = Carbon::parse($semester->endDate);
+            $today = Carbon::today();
+
+            if ($semesterEnd->gt($today) && $semesterStart->lt($today->addMonth(7))) {
+                $validSemesters->push($semester);
+            }
+        }
+
+        return $validSemesters;
+    }
+}
